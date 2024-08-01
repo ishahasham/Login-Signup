@@ -1,29 +1,61 @@
-import { useState } from 'react'
-import './App.css'
-import Login from './Login/Login'
-import Signup from './Signup/Signup'
+import React from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import './App.css';
+import Login from './Screens/Login/Login';
+import Signup from './Screens/Signup/Signup';
+import Dashboard from './Screens/Dashboard/Dashboard'; 
 
 function App() {
-  let [loginForm, setLoginForm]=useState(true);
-  const toggleForm = () => {
-    setLoginForm(!loginForm);
-  };
-
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = (e, navigate) => {
     e.preventDefault();
+    const form = e.target;
+    const email = form.email.value;
+    const password = form.password.value;
+
+    if (form.name) {
+      //  signup
+      const name = form.name.value;
+      const newUser = { name, email, password };
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      users.push(newUser);
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Signup successful!');
+      navigate('/login');
+    } else {
+      //  login
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const user = users.find((u) => u.email === email && u.password === password);
+      if (user) {
+        alert('Login successful!');
+        navigate('/dashboard');
+      } else {
+        alert('Invalid email or password');
+      }
+    }
   };
 
   return (
-    <div className="form-container">
-    <div className="form-card">
-      {loginForm ? (
-        <Login onSubmit={handleFormSubmit} onToggleForm={toggleForm} />
-      ) : (
-        <Signup onSubmit={handleFormSubmit} onToggleForm={toggleForm} />
-      )}
+    <div>
+      <div>
+        <Routes>
+          <Route path="/login" element={<LoginForm onSubmit={handleFormSubmit} />} />
+          <Route path="/signup" element={<SignupForm onSubmit={handleFormSubmit} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<LoginForm onSubmit={handleFormSubmit} />} />
+        </Routes>
+      </div>
     </div>
-  </div>
-  )
+  );
 }
 
-export default App
+const LoginForm = ({ onSubmit }) => {
+  const navigate = useNavigate();
+  return <Login onSubmit={(e) => onSubmit(e, navigate)} />;
+};
+
+const SignupForm = ({ onSubmit }) => {
+  const navigate = useNavigate();
+  return <Signup onSubmit={(e) => onSubmit(e, navigate)} />;
+};
+
+export default App;
